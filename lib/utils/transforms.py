@@ -175,6 +175,7 @@ def crop(img, center, scale, output_size, rot=0):
             return torch.zeros(output_size[0], output_size[1], img.shape[2]) \
                         if len(img.shape) > 2 else torch.zeros(output_size[0], output_size[1])
         else:
+            print('1111', img.shape, [new_ht, new_wd])
             img = np.resize(img, [new_ht, new_wd]) #scipy.misc.imresize(img, [new_ht, new_wd])  # (0-1)-->(0-255)
             center_new[0] = center_new[0] * 1.0 / sf
             center_new[1] = center_new[1] * 1.0 / sf
@@ -209,7 +210,8 @@ def crop(img, center, scale, output_size, rot=0):
         # Remove padding
         new_img = scipy.misc.imrotate(new_img, rot)
         new_img = new_img[pad:-pad, pad:-pad]
-    new_img = img = np.resize(img, output_size) #scipy.misc.imresize(new_img, output_size)
+    print('2222', img.shape, output_size)
+    new_img = np.resize(img, output_size) #scipy.misc.imresize(new_img, output_size)
     return new_img
 
 
