@@ -212,8 +212,8 @@ def crop(img, center, scale, output_size, rot=0):
         # Remove padding
         new_img = scipy.misc.imrotate(new_img, rot)
         new_img = new_img[pad:-pad, pad:-pad]
-    print('2222', img.shape, output_size)
-    new_img = np.array(Image.fromarray(img).resize(output_size, Image.BICUBIC)) #scipy.misc.imresize(new_img, output_size)
+    print('2222', new_img.shape, output_size)
+    new_img = np.array(Image.fromarray(new_img).resize(output_size, Image.BICUBIC)) #scipy.misc.imresize(new_img, output_size)
     return new_img
 
 
