@@ -9,8 +9,7 @@ import torch
 import scipy
 import scipy.misc
 import numpy as np
-from PIL import Image
-
+import skimage
 
 
 MATCHED_PARTS = {
@@ -177,8 +176,7 @@ def crop(img, center, scale, output_size, rot=0):
             return torch.zeros(output_size[0], output_size[1], img.shape[2]) \
                         if len(img.shape) > 2 else torch.zeros(output_size[0], output_size[1])
         else:
-            print('1111', img.dtype, img.shape, [new_ht, new_wd])
-            img = np.array(Image.fromarray(img.astype(np.uint8)).resize([new_ht, new_wd], Image.BICUBIC)) #scipy.misc.imresize(img, [new_ht, new_wd])  # (0-1)-->(0-255)
+            img = skimage.transform.resize(img, [new_ht, new_wd], order=3) #scipy.misc.imresize(img, [new_ht, new_wd])  # (0-1)-->(0-255)
             center_new[0] = center_new[0] * 1.0 / sf
             center_new[1] = center_new[1] * 1.0 / sf
             scale = scale / sf
@@ -212,8 +210,7 @@ def crop(img, center, scale, output_size, rot=0):
         # Remove padding
         new_img = scipy.misc.imrotate(new_img, rot)
         new_img = new_img[pad:-pad, pad:-pad]
-    print('2222', img.dtype, new_img.shape, output_size)
-    new_img = np.array(Image.fromarray(new_img.astype(np.uint8)).resize(output_size, Image.BICUBIC)) #scipy.misc.imresize(new_img, output_size)
+    new_img = skimage.transform.resize(new_img, output_size, order=3) #scipy.misc.imresize(new_img, output_size)
     return new_img
 
 
