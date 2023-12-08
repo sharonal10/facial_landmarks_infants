@@ -177,8 +177,8 @@ def crop(img, center, scale, output_size, rot=0):
             return torch.zeros(output_size[0], output_size[1], img.shape[2]) \
                         if len(img.shape) > 2 else torch.zeros(output_size[0], output_size[1])
         else:
-            print('1111', img.shape, [new_ht, new_wd])
-            img = np.array(Image.fromarray(img).resize([new_ht, new_wd], Image.BICUBIC)) #scipy.misc.imresize(img, [new_ht, new_wd])  # (0-1)-->(0-255)
+            print('1111', img[0], img.shape, [new_ht, new_wd])
+            img = np.array(Image.fromarray((img * 255).clip(0, 255).astype(np.uint8)).resize([new_ht, new_wd], Image.BICUBIC)) #scipy.misc.imresize(img, [new_ht, new_wd])  # (0-1)-->(0-255)
             center_new[0] = center_new[0] * 1.0 / sf
             center_new[1] = center_new[1] * 1.0 / sf
             scale = scale / sf
@@ -212,8 +212,8 @@ def crop(img, center, scale, output_size, rot=0):
         # Remove padding
         new_img = scipy.misc.imrotate(new_img, rot)
         new_img = new_img[pad:-pad, pad:-pad]
-    print('2222', new_img.shape, output_size)
-    new_img = np.array(Image.fromarray(new_img).resize(output_size, Image.BICUBIC)) #scipy.misc.imresize(new_img, output_size)
+    print('2222', new_img[0], new_img.shape, output_size)
+    new_img = np.array(Image.fromarray((new_img * 255).clip(0, 255).astype(np.uint8)).resize(output_size, Image.BICUBIC)) #scipy.misc.imresize(new_img, output_size)
     return new_img
 
 
