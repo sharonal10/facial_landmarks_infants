@@ -99,7 +99,8 @@ def main():
     #     num_workers=config.WORKERS,
     #     pin_memory=config.PIN_MEMORY
     # )
-    npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/melanie/melanie_rgb_12_09_256/ManyBabies_melanie_2065_10.npz"
+    # npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/melanie/melanie_rgb_12_09_256/ManyBabies_melanie_2065_10.npz"
+    npz_path = rf"/viscam/projects/infants/sharonal/google_video_rgb/ManyBabies_melanie_2065_10.npz"
     dataset = VideoFrameDataset(npz_path)
     dataloader = DataLoader(dataset, 
                              batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
