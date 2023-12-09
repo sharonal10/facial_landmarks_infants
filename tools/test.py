@@ -39,6 +39,8 @@ def main():
 
     args = parse_args()
 
+    print(args.cfg)
+
     logger, final_output_dir, tb_log_dir = \
         utils.create_logger(config, args.cfg, 'test')
 
