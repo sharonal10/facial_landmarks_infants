@@ -111,15 +111,18 @@ def main():
                              pin_memory=config.PIN_MEMORY)
     
     flattened_outputs = []
-
+    i = 0
     for batch in dataloader:
+        print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
         output = model(batch)
         score_map = output.data.cpu()
         preds = decode_preds(score_map, torch.tensor([[32.0, 32.0]]), torch.tensor([0.32]), [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
         print('preds size:', preds.shape)
+        i += 1
 
 
         flattened_output = output.view(config.TEST.BATCH_SIZE_PER_GPU*len(gpus), -1)  # Flatten to shape (8, 136)
+        print('output shape', flattened_output.shape)
         flattened_outputs.append(flattened_output)
 
     final_output = torch.cat(flattened_outputs, dim=0)
