@@ -62,6 +62,8 @@ def run_model():
 
     logger, final_output_dir, tb_log_dir = \
         utils.create_logger(config, config_path, 'test')
+    
+    print(config)
     logger.info(pprint.pformat(config))
 
     cudnn.benchmark = config.CUDNN.BENCHMARK

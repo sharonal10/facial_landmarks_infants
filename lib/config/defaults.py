@@ -141,5 +141,6 @@ def update_config(cfg, args):
 
 if __name__ == '__main__':
     import sys
+    print('does this part get run?')
     with open(sys.argv[1], 'w') as f:
         print(_C, file=f)
