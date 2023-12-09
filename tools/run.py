@@ -121,7 +121,7 @@ def main():
         i += 1
 
 
-        flattened_output = output.view(config.TEST.BATCH_SIZE_PER_GPU*len(gpus), -1)  # Flatten to shape (8, 136)
+        flattened_output = preds.view(config.TEST.BATCH_SIZE_PER_GPU*len(gpus), -1)  # Flatten to shape (8, 136)
         print('output shape', flattened_output.shape)
         flattened_outputs.append(flattened_output)
 
