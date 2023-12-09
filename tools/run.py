@@ -30,6 +30,7 @@ from collections import namedtuple
 class VideoFrameDataset(Dataset):
     def __init__(self, npz_path):
         npz_data = np.load(npz_path)['frames']
+        print(npz_data.shape)
         self.length = npz_data.shape[0]
 
         self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 3, 1, 1)
@@ -98,7 +99,7 @@ def main():
     #     num_workers=config.WORKERS,
     #     pin_memory=config.PIN_MEMORY
     # )
-    npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/bettina/bettina_rgb_12_04/ManyBabies_bettina_10_10.npz"
+    npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/bettina/bettina_rgb_12_08_256/ManyBabies_bettina_10_10.npz"
     dataset = VideoFrameDataset(npz_path)
     dataloader = DataLoader(dataset, 
                              batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
@@ -112,7 +113,7 @@ def main():
         print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
         output = model(batch)
         score_map = output.data.cpu()
-        preds = decode_preds(score_map, torch.tensor([[32.0, 32.0]]), torch.tensor([0.32]), [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
+        preds = decode_preds(score_map, torch.tensor([[128.0, 128.0]]), torch.tensor([1.28]), [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
         print('preds size:', preds.shape)
         i += 1
 
