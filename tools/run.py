@@ -23,6 +23,8 @@ from lib.utils import utils
 from lib.datasets import get_dataset
 from lib.core import function
 from lib.core.evaluation import decode_preds
+from collections import namedtuple
+
 
 
 class VideoFrameDataset(Dataset):
@@ -56,14 +58,18 @@ class VideoFrameDataset(Dataset):
 
 
 def main():
+    
+    Args = namedtuple('Args', ['cfg', 'model_file'])
 
-    config_path = rf"experiments/300w/hrnet-r90jt.yaml"
-    print(config_path)
+    # Usage
+    args = Args(cfg=rf"experiments/300w/hrnet-r90jt.yaml", model_file="infanface_pretrained/hrnet-r90jt.pth")
+
+    update_config(config, args)
 
     logger, final_output_dir, tb_log_dir = \
-        utils.create_logger(config, config_path, 'test')
+        utils.create_logger(config, args.cfg, 'test')
     
-    print(config)
+    # print(config)
     logger.info(pprint.pformat(config))
 
     cudnn.benchmark = config.CUDNN.BENCHMARK
@@ -79,7 +85,7 @@ def main():
     model = nn.DataParallel(model, device_ids=gpus).cuda()
 
     # load model
-    state_dict = torch.load("infanface_pretrained/hrnet-r90jt.pth")
+    state_dict = torch.load(args.model_file)
     if 'state_dict' in state_dict.keys():
         state_dict = state_dict['state_dict']
         model.load_state_dict(state_dict)
