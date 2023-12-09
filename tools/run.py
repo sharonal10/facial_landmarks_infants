@@ -28,32 +28,28 @@ from collections import namedtuple
 
 
 class VideoFrameDataset(Dataset):
-    def __init__(self, video_path):
-        self.cap = cv2.VideoCapture(video_path)
-        self.length = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    def __init__(self, npz_path):
+        npz_data = np.load(npz_path)
+        self.length = self.data.shape[0]
 
+        self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 3, 1, 1)
+        self.std = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 3, 1, 1)
 
-        self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32)
-        self.std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+        self.data = (npz_data - self.mean) / self.std
+
+        print('preprocessing done.')
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-        ret, frame = self.cap.read()
-        if ret:
-            # Convert frame to tensor, preprocess as needed
-            frame_tensor = self.preprocess_frame(frame)
-            return frame_tensor
-        else:
-            raise IndexError("Index out of range")
+        return self.data[idx]
 
     def preprocess_frame(self, frame):
         # Implement any preprocessing here
         # For example, resize, normalize, etc.
         input = np.copy(frame).astype(np.float32)
-        input = (input / 255.0 - self.mean) / self.std
+        input = (input - self.mean) / self.std
         return torch.from_numpy(input).permute(2,0,1).unsqueeze(0)
 
 
@@ -102,8 +98,8 @@ def main():
     #     num_workers=config.WORKERS,
     #     pin_memory=config.PIN_MEMORY
     # )
-    video_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/bettina/bettina_face_12_04/ManyBabies_bettina_10_10.mp4"
-    dataset = VideoFrameDataset(video_path)
+    npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/bettina/bettina_rgb_12_04/ManyBabies_bettina_10_10.npz"
+    dataset = VideoFrameDataset(npz_path)
     dataloader = DataLoader(dataset, 
                              batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
                              shuffle=False,
