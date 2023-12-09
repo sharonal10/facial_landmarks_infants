@@ -110,10 +110,13 @@ def main():
     flattened_outputs = []
     i = 0
     for batch in dataloader:
+        centers = torch.tensor([[128.0, 128.0]] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
+        scales =  torch.tensor([1.28] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
+        print('batch.shape', batch.shape, centers.shape, scales.shape)
         print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
         output = model(batch)
         score_map = output.data.cpu()
-        preds = decode_preds(score_map, torch.tensor([[128.0, 128.0]]), torch.tensor([1.28]), [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
+        preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
         print('preds size:', preds.shape)
         i += 1
 
