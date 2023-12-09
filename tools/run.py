@@ -135,6 +135,8 @@ def main():
 
     print(f"Saved tensor to {csv_file_path}")
     print(final_output[0])
+    print('------------')
+    print(final_output[1])
     print(final_output.shape)
 
 # run_model()
