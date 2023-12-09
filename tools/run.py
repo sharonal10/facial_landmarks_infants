@@ -122,6 +122,8 @@ def run_model():
     print(final_output[0])
     print(final_output.shape)
 
+run_model()
+
 
 #     filenames, nme, predictions = function.inference(config, test_loader, model)
     
