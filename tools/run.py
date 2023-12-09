@@ -55,7 +55,7 @@ class VideoFrameDataset(Dataset):
         return torch.from_numpy(input).permute(2,0,1).unsqueeze(0)
 
 
-def run_model():
+def main():
 
     config_path = rf"experiments/300w/hrnet-r90jt.yaml"
     print(config_path)
@@ -127,7 +127,7 @@ def run_model():
     print(final_output[0])
     print(final_output.shape)
 
-run_model()
+# run_model()
 
 
 #     filenames, nme, predictions = function.inference(config, test_loader, model)
@@ -154,6 +154,6 @@ run_model()
 #     torch.save(predictions, os.path.join(final_output_dir, 'predictions.pth'))
 
 
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
 
