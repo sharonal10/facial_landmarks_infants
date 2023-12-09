@@ -191,7 +191,7 @@ def inference(config, data_loader, model):
 
     with torch.no_grad():
         for i, (inp, target, meta) in enumerate(data_loader):
-            print('inp.shape', inp.shape)
+            print('inp.shape', inp.shape, meta['center'], meta['scale'])
             data_time.update(time.time() - end)
             filenames.extend([os.path.basename(filename) for filename in meta['image_path']])
             output = model(inp)
