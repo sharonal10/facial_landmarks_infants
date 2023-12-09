@@ -29,7 +29,7 @@ from collections import namedtuple
 
 class VideoFrameDataset(Dataset):
     def __init__(self, npz_path):
-        npz_data = np.load(npz_path)
+        npz_data = np.load(npz_path)['frames']
         self.length = npz_data.shape[0]
 
         self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 3, 1, 1)
