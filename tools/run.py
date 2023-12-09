@@ -58,7 +58,7 @@ class VideoFrameDataset(Dataset):
 def run_model():
 
     logger, final_output_dir, tb_log_dir = \
-        utils.create_logger(config, "experiments/300w/hrnet-r90jt.yaml", 'test')
+        utils.create_logger(config, rf"experiments/300w/hrnet-r90jt.yaml", 'test')
     logger.info(pprint.pformat(config))
 
     cudnn.benchmark = config.CUDNN.BENCHMARK
