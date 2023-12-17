@@ -87,7 +87,7 @@ class InfantFacialLandmarksModel(nn.Module):
             # print('preds.shape', preds.shape)
             all_preds.append(preds)
 
-        output = torch.cat(all_preds, dim=0)
+        output = torch.cat(all_preds, dim=0).cuda()
         print('output.shape', x.shape, output.shape)
         return output
 
