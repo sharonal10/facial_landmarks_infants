@@ -25,6 +25,72 @@ from lib.core import function
 from lib.core.evaluation import decode_preds
 from collections import namedtuple
 
+class InfantFacialLandmarksModel(nn.Module):
+    def __init__(self):
+        super().__init__()
+        Args = namedtuple('Args', ['cfg', 'model_file'])
+
+        # Usage
+        base_dir = rf"/viscam/projects/infants/sharonal/infants-sharonthird_party/facial_landmarks_infants"
+        args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file="{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
+
+        update_config(config, args)
+
+        logger, final_output_dir, tb_log_dir = \
+            utils.create_logger(config, args.cfg, 'test')
+        
+        # print(config)
+        logger.info(pprint.pformat(config))
+
+        cudnn.benchmark = config.CUDNN.BENCHMARK
+        cudnn.determinstic = config.CUDNN.DETERMINISTIC
+        cudnn.enabled = config.CUDNN.ENABLED
+
+        config.defrost()
+        config.MODEL.INIT_WEIGHTS = False
+        config.freeze()
+        self.model = models.get_face_alignment_net(config)
+
+        gpus = list(config.GPUS)
+        self.model = nn.DataParallel(self.model, device_ids=gpus).cuda()
+
+        # load model
+        state_dict = torch.load(args.model_file)
+        if 'state_dict' in state_dict.keys():
+            state_dict = state_dict['state_dict']
+            self.model.load_state_dict(state_dict)
+        else:
+            self.model.module.load_state_dict(state_dict)
+        
+
+    def forward(self, x):
+        # x: (b, 3, h, w)
+        # x = (x - self.pixel_mean[None, :, None, None]) / self.pixel_std[None, :, None, None]
+
+        b, _, h, w = x.shape
+        assert h == w == 256, (h, w)
+
+        centers = torch.tensor([[128.0, 128.0]] * b)
+        scales =  torch.tensor([1.28] * b)
+        print('batch.shape', x.shape, centers.shape, scales.shape)
+        output = self.model(x)
+        score_map = output.data.cpu()
+        preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
+        print('preds size:', preds.shape)
+
+
+        output = preds.reshape(b, -1, 1, 1)  # we want shape b, 136, 1, 1
+        assert False, (x.shape, output.shape)
+        return output
+
+        # # with torch.no_grad():
+        # intermediate_output = self.model.get_intermediate_layers(x, self.n_last_blocks)
+        # output = torch.cat([x[:, 0] for x in intermediate_output], dim=-1)
+        # if self.avgpool:
+        #     output = torch.cat((output.unsqueeze(-1), torch.mean(intermediate_output[-1][:, 1:], dim=1).unsqueeze(-1)), dim=-1)
+        #     output = output.reshape(output.shape[0], -1)
+        # output = output[:, :, None, None]  # (b, c, h=1, w=1)
+        # return output
 
 
 class VideoFrameDataset(Dataset):
@@ -46,15 +112,8 @@ class VideoFrameDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
 
-    def preprocess_frame(self, frame):
-        # Implement any preprocessing here
-        # For example, resize, normalize, etc.
-        input = np.copy(frame).astype(np.float32)
-        input = (input - self.mean) / self.std
-        return torch.from_numpy(input).permute(2,0,1).unsqueeze(0)
 
-
-def main():
+def run_model_once():
     
     Args = namedtuple('Args', ['cfg', 'model_file'])
 
@@ -166,6 +225,6 @@ def main():
 #     torch.save(predictions, os.path.join(final_output_dir, 'predictions.pth'))
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
 
