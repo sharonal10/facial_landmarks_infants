@@ -82,7 +82,7 @@ class InfantFacialLandmarksModel(nn.Module):
             output = self.model(small_batch)
             score_map = output.data.cpu()
             preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
-            print(preds[0])
+            print(preds.reshape(small_batch_len, 68, 2)[0])
             assert False
             # print('preds size:', preds.shape)
             preds = preds.reshape(small_batch_len, -1, 1, 1) # we want shape small_batch_len, 136, 1, 1
