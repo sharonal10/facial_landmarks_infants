@@ -121,14 +121,35 @@ class VideoFrameDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx]
+    
+def from_npz_to_pt(npz_path, tensor):
+    print('from', npz_path)
+    directory, filename = os.path.split(npz_path)
+    base_directory, old_dir_name = os.path.split(directory)
+
+    new_dir_name = old_dir_name.replace('rgb_256', 'landmarks')
+    new_directory = os.path.join(base_directory, new_dir_name)
+
+    new_filename = os.path.splitext(filename)[0] + '.pt'
+    new_file_path = os.path.join(new_directory, new_filename)
+
+    if not os.path.exists(new_directory):
+        os.makedirs(new_directory)
+
+    torch.save(tensor, new_file_path)
+
+    print('saved in', new_file_path)
 
 
-def run_model_once():
+
+
+def run_model_once(npz_path):
     
     Args = namedtuple('Args', ['cfg', 'model_file'])
 
     # Usage
-    args = Args(cfg=rf"experiments/300w/hrnet-r90jt.yaml", model_file="infanface_pretrained/hrnet-r90jt.pth")
+    base_dir = rf"/viscam/projects/infants/sharonal/infants-sharon/third_party/facial_landmarks_infants"
+    args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
 
     update_config(config, args)
 
@@ -169,7 +190,8 @@ def run_model_once():
     #     pin_memory=config.PIN_MEMORY
     # )
     # npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/melanie/melanie_rgb_12_09_256/ManyBabies_melanie_2065_10.npz"
-    npz_path = rf"/viscam/projects/infants/sharonal/google_video_rgb/ManyBabies_melanie_2065_10.npz"
+    # npz_path = rf"/viscam/projects/infants/sharonal/google_video_rgb/ManyBabies_melanie_2065_10.npz"
+    print('loading', npz_path)
     dataset = VideoFrameDataset(npz_path)
     dataloader = DataLoader(dataset, 
                              batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
@@ -183,7 +205,7 @@ def run_model_once():
         centers = torch.tensor([[128.0, 128.0]] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
         scales =  torch.tensor([1.28] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
         print('batch.shape', batch.shape, centers.shape, scales.shape)
-        print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
+        # print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
         output = model(batch)
         score_map = output.data.cpu()
         preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
@@ -196,17 +218,20 @@ def run_model_once():
         flattened_outputs.append(flattened_output)
 
     final_output = torch.cat(flattened_outputs, dim=0)
-    df = pd.DataFrame(final_output.numpy())
+    print('final_output.shape', final_output.shape)
 
-    # Save the DataFrame as a CSV file
-    csv_file_path = 'facial_landmarks_output.csv'
-    df.to_csv(csv_file_path, index=False)
+    # save tensor as pt file
+    from_npz_to_pt(npz_path, final_output)
+    # df = pd.DataFrame(final_output.numpy())
 
-    print(f"Saved tensor to {csv_file_path}")
-    print(final_output[0])
-    print('------------')
-    print(final_output[1])
-    print(final_output.shape)
+    # # Save the DataFrame as a CSV file
+    # csv_file_path = 'facial_landmarks_output.csv'
+    # df.to_csv(csv_file_path, index=False)
+
+    # print(f"Saved tensor to {csv_file_path}")
+    # print(final_output[0])
+    # print('------------')
+    # print(final_output[1])
 
 # run_model()
 
