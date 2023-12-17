@@ -70,17 +70,25 @@ class InfantFacialLandmarksModel(nn.Module):
         b, _, h, w = x.shape
         assert h == w == 256, (h, w)
 
-        centers = torch.tensor([[128.0, 128.0]] * b)
-        scales =  torch.tensor([1.28] * b)
-        print('batch.shape', x.shape, centers.shape, scales.shape)
-        output = self.model(x)
-        score_map = output.data.cpu()
-        preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
-        print('preds size:', preds.shape)
+        sub_batch_size = 8
+        all_preds = []
 
+        for i in range(0, b, sub_batch_size):
+            small_batch = x[i:i + sub_batch_size]
+            small_batch_len = len(small_batch) # the last one may be smaller
+            centers = torch.tensor([[128.0, 128.0]] * small_batch_len)
+            scales =  torch.tensor([1.28] * small_batch_len)
+            print('batch.shape', x.shape, small_batch.shape, centers.shape, scales.shape)
+            output = self.model(small_batch)
+            score_map = output.data.cpu()
+            preds = decode_preds(score_map, centers, scales, [64, 64]) # 32's are just half of the image size. maybe need resize image bigger (256)
+            print('preds size:', preds.shape)
+            preds = preds.reshape(b, -1, 1, 1) # we want shape b, 136, 1, 1
+            print('preds.shape', preds.shape)
+            all_preds.append(preds)
 
-        output = preds.reshape(b, -1, 1, 1)  # we want shape b, 136, 1, 1
-        assert False, (x.shape, output.shape)
+        output = torch.cat(all_preds, dim=0)
+        print('output.shape', x.shape, output.shape)
         return output
 
         # # with torch.no_grad():
