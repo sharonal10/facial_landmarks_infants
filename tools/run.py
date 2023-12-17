@@ -31,8 +31,8 @@ class InfantFacialLandmarksModel(nn.Module):
         Args = namedtuple('Args', ['cfg', 'model_file'])
 
         # Usage
-        base_dir = rf"/viscam/projects/infants/sharonal/infants-sharonthird_party/facial_landmarks_infants"
-        args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file="{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
+        base_dir = rf"/viscam/projects/infants/sharonal/infants-sharon/third_party/facial_landmarks_infants"
+        args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
 
         update_config(config, args)
 
