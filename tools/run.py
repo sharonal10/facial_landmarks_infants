@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader, Dataset
 import sys
 import pandas as pd
 import cv2  # For video processing
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import lib.models as models
 from lib.config import config, update_config
 from lib.utils import utils
