@@ -236,7 +236,7 @@ def run_model_once(npz_path):
 # run_model()
     
 
-def run_model_once(npz_data, frame_size):
+def run_model_preprocess(npz_data, frame_size):
     # 1) takes in npz data, not a path
     # 2) returns the landmarks data instead of saving a file.
     # meant to be used in preprocess scripts
