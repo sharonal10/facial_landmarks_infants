@@ -104,9 +104,8 @@ class InfantFacialLandmarksModel(nn.Module):
 
 
 class VideoFrameDataset(Dataset):
-    def __init__(self, npz_path):
-        npz_data = np.load(npz_path)['frames']
-        print(npz_data.shape)
+    def __init__(self, npz_data):
+        print('npz_data.shape', npz_data.shape)
         self.length = npz_data.shape[0]
 
         self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 3, 1, 1)
@@ -192,7 +191,8 @@ def run_model_once(npz_path):
     # npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/melanie/melanie_rgb_12_09_256/ManyBabies_melanie_2065_10.npz"
     # npz_path = rf"/viscam/projects/infants/sharonal/google_video_rgb/ManyBabies_melanie_2065_10.npz"
     print('loading', npz_path)
-    dataset = VideoFrameDataset(npz_path)
+    npz_data = np.load(npz_path)['frames']
+    dataset = VideoFrameDataset(npz_data)
     dataloader = DataLoader(dataset, 
                              batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
                              shuffle=False,
@@ -234,6 +234,89 @@ def run_model_once(npz_path):
     # print(final_output[1])
 
 # run_model()
+    
+
+def run_model_once(npz_data, frame_size):
+    # 1) takes in npz data, not a path
+    # 2) returns the landmarks data instead of saving a file.
+    # meant to be used in preprocess scripts
+    
+    Args = namedtuple('Args', ['cfg', 'model_file'])
+
+    # Usage
+    base_dir = rf"/viscam/projects/infants/sharonal/infants-sharon/third_party/facial_landmarks_infants"
+    args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
+
+    update_config(config, args)
+
+    logger, final_output_dir, tb_log_dir = \
+        utils.create_logger(config, args.cfg, 'test')
+    
+    # print(config)
+    logger.info(pprint.pformat(config))
+
+    cudnn.benchmark = config.CUDNN.BENCHMARK
+    cudnn.determinstic = config.CUDNN.DETERMINISTIC
+    cudnn.enabled = config.CUDNN.ENABLED
+
+    config.defrost()
+    config.MODEL.INIT_WEIGHTS = False
+    config.freeze()
+    model = models.get_face_alignment_net(config)
+
+    gpus = list(config.GPUS)
+    model = nn.DataParallel(model, device_ids=gpus).cuda()
+
+    # load model
+    state_dict = torch.load(args.model_file)
+    if 'state_dict' in state_dict.keys():
+        state_dict = state_dict['state_dict']
+        model.load_state_dict(state_dict)
+    else:
+        model.module.load_state_dict(state_dict)
+
+    # dataset_type = get_dataset(config)
+
+    # test_loader = DataLoader(
+    #     dataset=dataset_type(config,
+    #                          is_train=False),
+    #     batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
+    #     shuffle=False,
+    #     num_workers=config.WORKERS,
+    #     pin_memory=config.PIN_MEMORY
+    # )
+    # npz_path = rf"/viscam/projects/infants/sharonal/infants-sharon/data/sharonal_ManyBabies/melanie/melanie_rgb_12_09_256/ManyBabies_melanie_2065_10.npz"
+    # npz_path = rf"/viscam/projects/infants/sharonal/google_video_rgb/ManyBabies_melanie_2065_10.npz"
+    dataset = VideoFrameDataset(npz_data)
+    dataloader = DataLoader(dataset, 
+                             batch_size=config.TEST.BATCH_SIZE_PER_GPU*len(gpus),
+                             shuffle=False,
+                             num_workers=config.WORKERS,
+                             pin_memory=config.PIN_MEMORY)
+    
+    print('frame_size', frame_size)
+    flattened_outputs = []
+    i = 0
+    for batch in dataloader:
+        centers = torch.tensor([[frame_size/2.0, frame_size/2.0]] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
+        scales =  torch.tensor([frame_size/200] * config.TEST.BATCH_SIZE_PER_GPU*len(gpus))
+        print('batch.shape', batch.shape, centers.shape, scales.shape)
+        # print(f'processing batch {i} of {len(dataloader)}, batch size {config.TEST.BATCH_SIZE_PER_GPU*len(gpus)}')
+        output = model(batch)
+        score_map = output.data.cpu()
+        preds = decode_preds(score_map, centers, scales, [64, 64]) # 64 64 is a constant
+        print('preds size:', preds.shape)
+        i += 1
+
+
+        flattened_output = preds.view(preds.shape[0], -1)  # Flatten to shape (8, 136)
+        print('output shape', flattened_output.shape)
+        flattened_outputs.append(flattened_output)
+
+    final_output = torch.cat(flattened_outputs, dim=0)
+    print('final_output.shape', final_output.shape)
+
+    return final_output
 
 
 #     filenames, nme, predictions = function.inference(config, test_loader, model)
