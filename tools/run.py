@@ -32,8 +32,8 @@ class InfantFacialLandmarksModel(nn.Module):
 
         # Usage
         base_dir = rf"/viscam/projects/infants/sharonal/infants-sharon/third_party/facial_landmarks_infants"
-        args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
-
+        # args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet-r90jt.pth")
+        args = Args(cfg=rf"{base_dir}/experiments/300w/hrnet-r90jt.yaml", model_file=rf"{base_dir}/infanface_pretrained/hrnet_w18_small_model_v1.pth")
         update_config(config, args)
 
         logger, final_output_dir, tb_log_dir = \
